@@ -1,0 +1,22 @@
+{
+  "openapi": "3.0.1",
+  "info": {
+    "title": "chatbotservice",
+    "version": "1.0"
+  },
+  "paths": {
+    "/WeatherForecast/chatbot": {
+      "get": {
+        "tags": [
+          "WeatherForecast"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    }
+  },
+  "components": { }
+}

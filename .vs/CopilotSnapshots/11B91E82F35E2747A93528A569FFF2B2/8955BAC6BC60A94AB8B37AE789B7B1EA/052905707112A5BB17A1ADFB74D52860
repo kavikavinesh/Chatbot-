@@ -1,0 +1,59 @@
+﻿using Microsoft.AspNetCore.Mvc;
+using Azure;
+using Azure.AI.OpenAI;
+using OpenAI.Chat;
+using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.Azure.Functions.Worker;
+using Microsoft.Extensions.Logging;
+
+namespace chatbotservice.Controllers;
+
+[ApiController]
+[Route("[controller]")]
+public class WeatherForecastController : ControllerBase
+{
+    private static readonly string[] Summaries = new[]
+    {
+        "Freezing", "Bracing", "Chilly", "Cool", "Mild", "Warm", "Balmy", "Hot", "Sweltering", "Scorching"
+    };
+
+    private readonly ILogger<WeatherForecastController> _logger;
+
+    public WeatherForecastController(ILogger<WeatherForecastController> logger)
+    {
+        _logger = logger;
+    }
+    //var endpoint = new Uri("https://project58122331-resource.cognitiveservices.azure.com/openai/deployments/gpt-4o/chat/completions?api-version=2025-01-01-preview");
+
+    //var endpoint = new Uri("http://resource.cognitiveservices.azure.com/openai/deployments/gpt-4o/chat/completions?api-version=2025-01-01-preview");
+    //var key = "СYiFLdВAfMqЕkkF3ukj2kkЕВFТQNсВnNØsYnsg9fjwkdJAY8Vv6wJQQJ99CААСHYHv6ХJ3w3AAAAACOGuIrZ";
+
+    [HttpGet]
+    [Route("chatbot")]
+    public IActionResult Run()
+    {
+        var reponseee = new value();
+        var key ="69o2dOzUjiRB6ch8PX1zbvk5CaQ1NJUVCGI4atAOpbWI3GI1W8GJQQJ99CAACHYHv6XJ3AAAAACOGKCE4";
+        var endpoint = new Uri("https://project58122331-resource.service.ai.azure.com");
+        //var key = "DXwd63CukKm31Y4gnNYHpLzniy9dzz5AVd4YfwIXVg09F0cGAickJQQJ99CAACHYHv6XJ3w3AAАAАCOGrQPg";
+        var deploymentName = "gpt-4o";
+        AzureOpenAIClient azureClient = new (endpoint, new AzureKeyCredential(key));
+        ChatClient chatClient = azureClient.GetChatClient(deploymentName);
+        var requestOptions = new ChatCompletionOptions
+        {
+            MaxOutputTokenCount = 4096,
+            Temperature = 1.0f,
+            TopP = 1.0f
+        };
+        List<ChatMessage> messages = new List<ChatMessage>
+            {
+                new SystemChatMessage("You are a helpful assistant."),
+                new UserChatMessage("I am going to Paris, what should I see?")
+            };
+        var response = chatClient.CompleteChat(messages, requestOptions);
+        reponseee.values = response.Value.Content[0].Text;
+        //Console.WriteLine(response.Value.Content[0].Text);
+        return new OkObjectResult(reponseee);
+    }
+}

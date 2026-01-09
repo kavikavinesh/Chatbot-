@@ -1,0 +1,77 @@
+﻿using Microsoft.AspNetCore.Mvc;
+using Azure;
+using Azure.AI.OpenAI;
+using OpenAI.Chat;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Logging;
+
+namespace chatbotservice.Controllers;
+
+[ApiController]
+[Route("[controller]")]
+public class WeatherForecastController : ControllerBase
+{
+
+    private readonly ILogger<WeatherForecastController> _logger;
+    private readonly IConfiguration _configuration;
+
+    public WeatherForecastController(ILogger<WeatherForecastController> logger, IConfiguration configuration)
+    {
+        _logger = logger;
+        _configuration = configuration;
+    }
+
+    [HttpGet]
+    [Route("chatbot")]
+    public async Task<IActionResult> Run()
+    {
+        try
+        {
+            var response = new value();
+            
+            // Get credentials from configuration (appsettings.json or environment variables)
+            var key = _configuration["Azure:OpenAI:ApiKey"];
+            var endpointUrl = _configuration["Azure:OpenAI:Endpoint"];
+            var deploymentName = _configuration["Azure:OpenAI:DeploymentName"];
+            
+            // Validate configuration
+            if (string.IsNullOrEmpty(key) || string.IsNullOrEmpty(endpointUrl) || string.IsNullOrEmpty(deploymentName))
+            {
+                _logger.LogError("Azure OpenAI configuration is missing.");
+                return BadRequest("Azure OpenAI service is not properly configured.");
+            }
+            
+            var endpoint = new Uri(endpointUrl);
+            AzureOpenAIClient azureClient = new(endpoint, new AzureKeyCredential(key));
+            ChatClient chatClient = azureClient.GetChatClient(deploymentName);
+            
+            var requestOptions = new ChatCompletionOptions
+            {
+                MaxOutputTokenCount = 4096,
+                Temperature = 1.0f,
+                TopP = 1.0f
+            };
+            
+            List<ChatMessage> messages = new List<ChatMessage>
+            {
+                new SystemChatMessage("You are a helpful assistant."),
+                new UserChatMessage("I am going to Paris, what should I see?")
+            };
+            
+            var chatResponse = await chatClient.CompleteChatAsync(messages, requestOptions);
+            response.values = chatResponse.Value.Content[0].Text;
+            
+            return new OkObjectResult(response);
+        }
+        catch (HttpRequestException ex)
+        {
+            _logger.LogError(ex, "Network error occurred while calling Azure OpenAI service.");
+            return StatusCode(503, new { error = "Unable to reach Azure OpenAI service. Check endpoint URL and network connectivity." });
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "An error occurred while processing the chatbot request.");
+            return StatusCode(500, new { error = "An error occurred while processing your request." });
+        }
+    }
+}

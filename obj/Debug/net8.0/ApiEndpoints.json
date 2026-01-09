@@ -1,0 +1,12 @@
+[
+  {
+    "ContainingType": "chatbotservice.Controllers.WeatherForecastController",
+    "Method": "Run",
+    "RelativePath": "WeatherForecast/chatbot",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [],
+    "ReturnTypes": []
+  }
+]
